@@ -258,9 +258,26 @@ class AppUI(tk.Tk):
                     var.set(opts[0])
                     
             aspect_cb.bind("<<ComboboxSelected>>", update_res)
-            
+
+            # Deselect Target Scene: send only the reference jewelry + prompt for this prompt
+            skip_scene_var = tk.BooleanVar(value=False)
+            scene_title = f"Scene {idx}: {os.path.basename(scene_path)}"
+
+            def toggle_scene(var=skip_scene_var, frame=lf, title=scene_title):
+                if var.get():
+                    frame.config(text=f"{title}  [Target Scene DISABLED - reference jewelry + prompt only]")
+                else:
+                    frame.config(text=title)
+
+            ttk.Checkbutton(lf, text="Deselect Target Scene (send only reference jewelry + prompt)",
+                            variable=skip_scene_var, command=toggle_scene).pack(anchor=tk.W, padx=5, pady=(0, 5))
+
             # Pre-fill logically combining old string saves
             saved_val = existing_prompts.get(scene_name, {})
+            if isinstance(saved_val, dict):
+                skip_scene_var.set(bool(saved_val.get("skip_target_scene", False)))
+            toggle_scene()
+
             if isinstance(saved_val, dict):
                 text_widget.insert("1.0", saved_val.get("prompt", "Use the reference jewelry image to stylize the scene."))
                 aspect_var.set(saved_val.get("aspect_ratio", "1:1"))
@@ -276,7 +293,8 @@ class AppUI(tk.Tk):
             self.prompt_text_widgets[scene_name] = {
                 "text": text_widget,
                 "aspect": aspect_var,
-                "res": res_var
+                "res": res_var,
+                "skip_scene": skip_scene_var
             }
             
         # Save button at bottom
@@ -286,7 +304,8 @@ class AppUI(tk.Tk):
                 new_prompts[scene_nm] = {
                     "prompt": widgets["text"].get("1.0", tk.END).strip(),
                     "aspect_ratio": widgets["aspect"].get(),
-                    "resolution": widgets["res"].get()
+                    "resolution": widgets["res"].get(),
+                    "skip_target_scene": widgets["skip_scene"].get()
                 }
             
             os.makedirs("config", exist_ok=True)
@@ -323,9 +342,26 @@ class AppUI(tk.Tk):
         target_count = len(scenes)
         product_count = len(set(p['product_name'] for p in pairs))
         total_generated = len(pairs)
-        
+
+        # Count prompts that send only reference jewelry + prompt (target scene deselected)
+        import json
+        skipped_count = 0
+        prompts_file = os.path.join("config", "prompts.json")
+        if os.path.exists(prompts_file):
+            try:
+                with open(prompts_file, "r") as f:
+                    prompts_data = json.load(f)
+                scene_names = {os.path.splitext(os.path.basename(s))[0] for s in scenes}
+                skipped_count = sum(
+                    1 for name, val in prompts_data.items()
+                    if name in scene_names and isinstance(val, dict) and val.get("skip_target_scene", False)
+                )
+            except Exception:
+                pass
+
         report_text = (
             f"Target Scene Images: {target_count}\n"
+            f"Prompts with Target Scene Deselected: {skipped_count}\n"
             f"Valid Product Folders: {product_count}\n"
             f"-----------------------------------------\n"
             f"Total Outputs to Generate: {total_generated}"

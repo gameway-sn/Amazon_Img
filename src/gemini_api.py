@@ -34,6 +34,22 @@ class GeminiBatchAPI:
         if ext == '.webp': return 'image/webp'
         return 'application/octet-stream'
 
+    def _resolve_prompt(self, prompts_map, scene_name):
+        """
+        Returns (prompt_text, aspect_ratio, resolution, use_target_scene) for a scene.
+        Supports both the dict format and legacy plain-string prompt entries.
+        """
+        default_prompt = "Use the reference jewelry image to stylize the scene."
+        prompt_data = prompts_map.get(scene_name, {})
+        if isinstance(prompt_data, dict):
+            return (
+                prompt_data.get("prompt", default_prompt),
+                prompt_data.get("aspect_ratio", "1:1"),
+                prompt_data.get("resolution", "1024x1024"),
+                not prompt_data.get("skip_target_scene", False),
+            )
+        return (str(prompt_data) if prompt_data else default_prompt, "1:1", "1024x1024", True)
+
     def upload_file_with_poll(self, filepath, display_name=None):
         if not self.is_live:
             print(f"[DRY RUN] Would upload: {filepath}")
@@ -105,13 +121,17 @@ class GeminiBatchAPI:
         
         jsonl_lines = []
         for pair in pairs:
-            # Target image
-            t_path = pair['target_path']
-            if t_path not in uploaded_cache:
-                uploaded_cache[t_path] = self.upload_file_with_poll(t_path)
-            t_uri = uploaded_cache[t_path]
-            t_mime = self._get_mime_type(t_path)
-            
+            prompt_text, aspect_ratio, resolution, use_target_scene = self._resolve_prompt(prompts_map, pair['scene_name'])
+
+            # Target image (skipped entirely when the prompt has the target scene deselected)
+            t_uri, t_mime = None, None
+            if use_target_scene:
+                t_path = pair['target_path']
+                if t_path not in uploaded_cache:
+                    uploaded_cache[t_path] = self.upload_file_with_poll(t_path)
+                t_uri = uploaded_cache[t_path]
+                t_mime = self._get_mime_type(t_path)
+
             # Ref images
             refs_info = []
             for r_path in pair['ref_paths']:
@@ -123,20 +143,10 @@ class GeminiBatchAPI:
             
             # Key
             key = pair['key']
-            
-            prompt_data = prompts_map.get(pair['scene_name'], {})
-            if isinstance(prompt_data, dict):
-                prompt_text = prompt_data.get("prompt", "Use the reference jewelry image to stylize the scene.")
-                aspect_ratio = prompt_data.get("aspect_ratio", "1:1")
-                resolution = prompt_data.get("resolution", "1024x1024")
-            else:
-                prompt_text = str(prompt_data) if prompt_data else "Use the reference jewelry image to stylize the scene."
-                aspect_ratio = "1:1"
-                resolution = "1024x1024"
-                
+
             is_2k = resolution in ["2048x2048", "1792x2400", "2752x1536"]
-            
-            json_line = generate_jsonl_line(key, t_uri, t_mime, refs_info, prompt_text, model=model_name, aspect_ratio=aspect_ratio, is_2k=is_2k)
+
+            json_line = generate_jsonl_line(key, t_uri, t_mime, refs_info, prompt_text, model=model_name, aspect_ratio=aspect_ratio, is_2k=is_2k, use_target_scene=use_target_scene)
             jsonl_lines.append(json_line)
             
         # Save temp JSONL locally
@@ -209,20 +219,15 @@ class GeminiBatchAPI:
                 continue
                 
             try:
-                t_img = Image.open(pair['target_path'])
+                prompt_text, aspect_ratio, resolution, use_target_scene = self._resolve_prompt(prompts_map, pair['scene_name'])
                 ref_images = [Image.open(rp) for rp in pair['ref_paths']]
-                
-                prompt_data = prompts_map.get(pair['scene_name'], {})
-                if isinstance(prompt_data, dict):
-                    prompt_text = prompt_data.get("prompt", "Use the reference jewelry image to stylize the scene.")
-                    aspect_ratio = prompt_data.get("aspect_ratio", "1:1")
-                    resolution = prompt_data.get("resolution", "1024x1024")
+
+                # Target scene deselected -> send only the prompt + reference jewelry
+                if use_target_scene:
+                    t_img = Image.open(pair['target_path'])
+                    contents = [prompt_text, t_img] + ref_images
                 else:
-                    prompt_text = str(prompt_data) if prompt_data else "Use the reference jewelry image to stylize the scene."
-                    aspect_ratio = "1:1"
-                    resolution = "1024x1024"
-                
-                contents = [prompt_text, t_img] + ref_images
+                    contents = [prompt_text] + ref_images
                 
                 # Check mapping for 2K
                 is_2k = resolution in ["2048x2048", "1792x2400", "2752x1536"]

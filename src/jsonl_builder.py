@@ -95,16 +95,18 @@ def build_local_job_pairs(target_scene_dir, jewelry_ref_dir, output_base_dir=Non
                     })
     return pairs
 
-def generate_jsonl_line(key, target_uri, target_mime, refs_info, prompt_text, model="gemini-1.5-pro", aspect_ratio="1:1", is_2k=False):
+def generate_jsonl_line(key, target_uri, target_mime, refs_info, prompt_text, model="gemini-1.5-pro", aspect_ratio="1:1", is_2k=False, use_target_scene=True):
     """
     Given the Gemini File URIs, generates the Batch API JSONL line for one request.
     refs_info: list of dicts [{'uri': uri, 'mime': mime}]
+    use_target_scene: when False, the target scene image is omitted and only the
+    reference jewelry + prompt are sent (target_uri/target_mime are ignored).
     """
-    parts = [
-        {"text": "target scene image:"},
-        {"fileData": {"mimeType": target_mime, "fileUri": target_uri}}
-    ]
-    
+    parts = []
+    if use_target_scene:
+        parts.append({"text": "target scene image:"})
+        parts.append({"fileData": {"mimeType": target_mime, "fileUri": target_uri}})
+
     for i, ref in enumerate(refs_info, start=1):
         label = "reference jewelry image:" if len(refs_info) == 1 else f"reference jewelry image {i}:"
         parts.append({"text": label})
