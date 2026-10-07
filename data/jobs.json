@@ -1,0 +1,82 @@
+{
+    "2950a230": {
+        "run_id": "2950a230",
+        "run_name": "Run_01",
+        "batch_job_id": "batches/dry_run_job_1773925610",
+        "status": "JOB_STATE_SUCCEEDED",
+        "submit_lock": true,
+        "download_lock": false,
+        "convert_lock": false,
+        "created_at": 1773925610.0846932
+    },
+    "d9f0cd5b": {
+        "run_id": "d9f0cd5b",
+        "run_name": "Run_01_BATCH",
+        "batch_job_id": "batches/kyj0bga1kp9g71ir75cg21iy4lc4p2l82aum",
+        "status": "JOB_STATE_SUCCEEDED",
+        "submit_lock": true,
+        "download_lock": false,
+        "convert_lock": false,
+        "created_at": 1774287714.8062994
+    },
+    "2eb06588": {
+        "run_id": "2eb06588",
+        "run_name": "Run_02_batch",
+        "batch_job_id": "batches/rxkcw3qm4gdx473fthifg0oomqgt11xfjb1s",
+        "status": "JOB_STATE_SUCCEEDED",
+        "submit_lock": true,
+        "download_lock": false,
+        "convert_lock": false,
+        "created_at": 1774342473.215931
+    },
+    "bab49d9b": {
+        "run_id": "bab49d9b",
+        "run_name": "Run_03_batch",
+        "batch_job_id": "batches/bt6kb9zm6yzlj54o66zg1qpgcs3i7bm9h6mq",
+        "status": "JOB_STATE_SUCCEEDED",
+        "submit_lock": true,
+        "download_lock": false,
+        "convert_lock": false,
+        "created_at": 1775114608.3276408
+    },
+    "313870af": {
+        "run_id": "313870af",
+        "run_name": "Run_04",
+        "batch_job_id": "batches/hz0e3xm0jdsc37p8f9iqo1khm6m63weif6v3",
+        "status": "JOB_STATE_SUCCEEDED",
+        "submit_lock": true,
+        "download_lock": false,
+        "convert_lock": false,
+        "created_at": 1776613914.3548603
+    },
+    "32f4af5e": {
+        "run_id": "32f4af5e",
+        "run_name": "Run_05",
+        "batch_job_id": "batches/0ilxpcn3dkrl0asmhq632oxvj2y719cz1k5q",
+        "status": "JOB_STATE_SUCCEEDED",
+        "submit_lock": true,
+        "download_lock": false,
+        "convert_lock": false,
+        "created_at": 1777209291.9643326
+    },
+    "fce8440b": {
+        "run_id": "fce8440b",
+        "run_name": "BGL-28",
+        "batch_job_id": "batches/gsu8m2adqr387l6ma9h7uzh6c2t26v5e8s87",
+        "status": "JOB_STATE_SUCCEEDED",
+        "submit_lock": true,
+        "download_lock": false,
+        "convert_lock": false,
+        "created_at": 1781893883.1596534
+    },
+    "122f33cc": {
+        "run_id": "122f33cc",
+        "run_name": "BGL-32-38",
+        "batch_job_id": "batches/ypsth862jeljia18jhdnzmo62u8fifopldyf",
+        "status": "SUBMITTED",
+        "submit_lock": true,
+        "download_lock": false,
+        "convert_lock": false,
+        "created_at": 1782292850.6196644
+    }
+}
